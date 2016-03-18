@@ -16,11 +16,12 @@ class HashtagsScraper:
         # Let's parse some CLI options
         parser = argparse.ArgumentParser()
         parser.add_argument('-l', '--lang', help='Filter tweets by language', default='en')
+        parser.add_argument('-e', '--length', help='Minimum lenght for the hashtag', default=10)
 
         arguments = parser.parse_args()
 
-        if arguments.lang:
-            self.language = arguments.lang
+        self.language = arguments.lang
+        self.length = arguments.length
 
     def checkenv(self):
         if not os_path.exists(os_path.realpath("settings.json")):
@@ -105,7 +106,7 @@ class HashtagsScraper:
             for hashtag in hashtags:
                 text = hashtag['text']
                 # We're interested in words of 10 chars at least
-                if len(text) < 10:
+                if len(text) < self.length:
                     continue
 
                 try:
