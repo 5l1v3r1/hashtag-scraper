@@ -1,3 +1,4 @@
+import argparse
 import json
 import twitter
 from datetime import date
@@ -10,6 +11,16 @@ class HashtagsScraper:
 
         self.settings = None
         self.version = '1.0.0'
+        self.language = 'en'
+
+        # Let's parse some CLI options
+        parser = argparse.ArgumentParser()
+        parser.add_argument('-l', '--lang', help='Filter tweets by language', default='en')
+
+        arguments = parser.parse_args()
+
+        if arguments.lang:
+            self.language = arguments.lang
 
     def checkenv(self):
         if not os_path.exists(os_path.realpath("settings.json")):
@@ -82,7 +93,7 @@ class HashtagsScraper:
             except KeyError:
                 continue
 
-            if language != 'en':
+            if language != self.language:
                 continue
 
             # If we don't have an hashtag, let's skip the tweet
