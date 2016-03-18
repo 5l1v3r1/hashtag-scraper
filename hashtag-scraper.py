@@ -97,7 +97,11 @@ class HashtagsScraper:
                 if len(text) < 10:
                     continue
 
-                words.add(text.encode('utf-8').lower())
+                try:
+                    words.add(text.encode('utf-8').lower())
+                except:
+                    # If we get any encoding error, simply skip the hashtag
+                    continue
 
 
 try:
