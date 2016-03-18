@@ -60,12 +60,18 @@ class HashtagsScraper:
         # Let's check if we really have some valid credentials
         connection.VerifyCredentials()
 
+        print "Request tweet stream..."
+
         tweets = connection.GetStreamSample()
         words = set([])
 
+        print "Got stream, starting to analyze tweets"
+
         for tweet in tweets:
             # Do we have to dump the collected dumps?
-            if len(words) >= 100:
+            if len(words) >= 500:
+                print "Fetched more than 500 hashtags, dumping them to file"
+
                 with open('wordlist_hashtag.txt', 'a') as f_wordlist:
                     f_wordlist.write('\n'.join(words) + '\n')
                 words = set([])
@@ -91,7 +97,7 @@ class HashtagsScraper:
                 if len(text) < 10:
                     continue
 
-                words.add(text)
+                words.add(text.encode('utf-8').lower())
 
 
 try:
