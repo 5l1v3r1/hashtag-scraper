@@ -16,7 +16,7 @@ class HashtagsScraper:
         # Let's parse some CLI options
         parser = argparse.ArgumentParser()
         parser.add_argument('-l', '--lang', help='Filter tweets by language', default='en')
-        parser.add_argument('-e', '--length', help='Minimum lenght for the hashtag', default=10)
+        parser.add_argument('-e', '--length', help='Minimum length for the hashtag', default=10)
 
         arguments = parser.parse_args()
 
