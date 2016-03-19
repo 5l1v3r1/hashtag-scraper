@@ -1,6 +1,9 @@
 import argparse
 import json
 import twitter
+import logging
+import logging.handlers
+from colorlog import ColoredFormatter
 from datetime import date
 from os import path as os_path
 from lib.exceptions import exceptions
@@ -22,6 +25,17 @@ class HashtagScraper:
 
         self.language = arguments.lang
         self.length = arguments.length
+
+        # Init the logger
+        self.logger = logging.getLogger('hashtag-scraper')
+        self.logger.setLevel(logging.DEBUG)
+
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+
+        formatter = ColoredFormatter("%(log_color)s%(asctime)s|[%(levelname)-4s] %(message)s%(reset)s", "%H:%M:%S")
+        console.setFormatter(formatter)
+        self.logger.addHandler(console)
 
     def checkenv(self):
         if not os_path.exists(os_path.realpath("settings.json")):
@@ -72,17 +86,17 @@ class HashtagScraper:
         # Let's check if we really have some valid credentials
         connection.VerifyCredentials()
 
-        print "Request tweet stream..."
+        self.logger.info("Request tweet stream...")
 
         tweets = connection.GetStreamSample()
         words = set([])
 
-        print "Got stream, starting to analyze tweets"
+        self.logger.info("Got stream, starting to analyze tweets")
 
         for tweet in tweets:
             # Do we have to dump the collected dumps?
             if len(words) >= 500:
-                print "Fetched more than 500 hashtags, dumping them to file"
+                self.logger.info("Fetched more than 500 hashtags, dumping them to file")
 
                 with open('wordlist_hashtag.txt', 'a') as f_wordlist:
                     f_wordlist.write('\n'.join(words) + '\n')
