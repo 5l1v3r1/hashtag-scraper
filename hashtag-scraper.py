@@ -6,7 +6,7 @@ from os import path as os_path
 from lib.exceptions import exceptions
 
 
-class HashtagsScraper:
+class HashtagScraper:
     def __init__(self):
 
         self.settings = None
@@ -117,7 +117,7 @@ class HashtagsScraper:
 
 
 try:
-    scraper = HashtagsScraper()
+    scraper = HashtagScraper()
     scraper.run()
 except KeyboardInterrupt:
     print("Operation aborted")
