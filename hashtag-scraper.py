@@ -8,6 +8,7 @@ from datetime import date
 from os import path as os_path
 from lib.exceptions import exceptions
 from requests.exceptions import ChunkedEncodingError
+from socket import error as socket_error
 from time import sleep
 
 
@@ -95,6 +96,7 @@ class HashtagScraper:
             self.logger.info("Request tweet stream...")
 
             tweets = connection.GetStreamSample()
+            reported_length = 0
 
             self.logger.info("Got stream, starting to analyze tweets")
 
@@ -131,14 +133,30 @@ class HashtagScraper:
 
                         try:
                             words.add(text.encode('utf-8').lower())
+
+                            if len(words) % 100 == 0 and len(words) != reported_length:
+                                reported_length = len(words)
+                                self.logger.info("Fetched %s words" % str(len(words)))
                         except:
                             # If we get any encoding error, simply skip the hashtag
                             continue
-            except ChunkedEncodingError:
+            except (ChunkedEncodingError, socket_error):
                 # This happens when we can't keep up with Twitter feed, they will close the connection
                 self.logger.warn("Connection error, resuming...")
                 sleep(2)
                 continue
+            except KeyboardInterrupt:
+                # mhm something bad happened, let's dump the wordlist before dying
+                self.logger.warn("Operation aborted")
+                with open('wordlist_hashtag.txt', 'a') as f_wordlist:
+                    f_wordlist.write('\n'.join(words) + '\n')
+                break
+            except:
+                # mhm something bad happened, let's dump the wordlist before dying
+                self.logger.warn("Unexpected error, dumping hashtags before dying")
+                with open('wordlist_hashtag.txt', 'a') as f_wordlist:
+                    f_wordlist.write('\n'.join(words) + '\n')
+                break
 
 
 try:
