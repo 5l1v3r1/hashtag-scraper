@@ -7,13 +7,15 @@ from colorlog import ColoredFormatter
 from datetime import date
 from os import path as os_path
 from lib.exceptions import exceptions
+from requests.exceptions import ChunkedEncodingError
+from time import sleep
 
 
 class HashtagScraper:
     def __init__(self):
 
         self.settings = None
-        self.version = '1.0.0'
+        self.version = '1.0.1'
         self.language = 'en'
 
         # Let's parse some CLI options
@@ -86,48 +88,57 @@ class HashtagScraper:
         # Let's check if we really have some valid credentials
         connection.VerifyCredentials()
 
-        self.logger.info("Request tweet stream...")
-
-        tweets = connection.GetStreamSample()
         words = set([])
 
-        self.logger.info("Got stream, starting to analyze tweets")
+        # I'll wrap everything inside a busy loop, so I can resume it if the connection fails.
+        while True:
+            self.logger.info("Request tweet stream...")
 
-        for tweet in tweets:
-            # Do we have to dump the collected dumps?
-            if len(words) >= 500:
-                self.logger.info("Fetched more than 500 hashtags, dumping them to file")
+            tweets = connection.GetStreamSample()
 
-                with open('wordlist_hashtag.txt', 'a') as f_wordlist:
-                    f_wordlist.write('\n'.join(words) + '\n')
-                words = set([])
+            self.logger.info("Got stream, starting to analyze tweets")
 
-            # Skip non english tweets
             try:
-                language = tweet['lang']
-            except KeyError:
+                for tweet in tweets:
+                    # Do we have to dump the collected dumps?
+                    if len(words) >= 500:
+                        self.logger.info("Fetched more than 500 hashtags, dumping them to file")
+
+                        with open('wordlist_hashtag.txt', 'a') as f_wordlist:
+                            f_wordlist.write('\n'.join(words) + '\n')
+                        words = set([])
+
+                    # Skip non english tweets
+                    try:
+                        language = tweet['lang']
+                    except KeyError:
+                        continue
+
+                    if language != self.language:
+                        continue
+
+                    # If we don't have an hashtag, let's skip the tweet
+                    try:
+                        hashtags = tweet['entities']['hashtags']
+                    except KeyError:
+                        continue
+
+                    for hashtag in hashtags:
+                        text = hashtag['text']
+                        # We're interested in words of 10 chars at least
+                        if len(text) < self.length:
+                            continue
+
+                        try:
+                            words.add(text.encode('utf-8').lower())
+                        except:
+                            # If we get any encoding error, simply skip the hashtag
+                            continue
+            except ChunkedEncodingError:
+                # This happens when we can't keep up with Twitter feed, they will close the connection
+                self.logger.warn("Connection error, resuming...")
+                sleep(2)
                 continue
-
-            if language != self.language:
-                continue
-
-            # If we don't have an hashtag, let's skip the tweet
-            try:
-                hashtags = tweet['entities']['hashtags']
-            except KeyError:
-                continue
-
-            for hashtag in hashtags:
-                text = hashtag['text']
-                # We're interested in words of 10 chars at least
-                if len(text) < self.length:
-                    continue
-
-                try:
-                    words.add(text.encode('utf-8').lower())
-                except:
-                    # If we get any encoding error, simply skip the hashtag
-                    continue
 
 
 try:
