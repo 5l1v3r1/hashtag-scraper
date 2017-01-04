@@ -40,6 +40,20 @@ class HashtagScraper:
         console.setFormatter(formatter)
         self.logger.addHandler(console)
 
+        # Disable warnings about SSL connections
+        try:
+            import requests.packages.urllib3
+            from requests.packages.urllib3.exceptions import InsecureRequestWarning
+            requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+        except ImportError:
+            pass
+
+        try:
+            from requests.packages.urllib3.exceptions import InsecurePlatformWarning
+            requests.packages.urllib3.disable_warnings(InsecurePlatformWarning)
+        except ImportError:
+            pass
+
     def checkenv(self):
         if not os_path.exists(os_path.realpath("settings.json")):
             raise exceptions.InvalidSettings("Please rename the file settings-dist.json to settings.json and fill the required info")
@@ -63,9 +77,9 @@ class HashtagScraper:
 
     def banner(self):
         print("Hashtag Scraper " + self.version + " - A better way of scraping")
-        print("Copyright (C) " + str(date.today().year) + " FabbricaBinaria - Davide Tampellini")
+        print("Copyright (C) 2016-" + str(date.today().year) + " FabbricaBinaria - Davide Tampellini")
         print("===============================================================================")
-        print("Dump Scraper is Free Software, distributed under the terms of the GNU General")
+        print("Hashtag Scraper is Free Software, distributed under the terms of the GNU General")
         print("Public License version 3 or, at your option, any later version.")
         print("This program comes with ABSOLUTELY NO WARRANTY as per sections 15 & 16 of the")
         print("license. See http://www.gnu.org/licenses/gpl-3.0.html for details.")
